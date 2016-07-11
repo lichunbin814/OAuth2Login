@@ -24,7 +24,7 @@ namespace Oauth2Login.Service
     // Twitter QueryStringBuilder.Build parameters MUST BE ALPHABETICALLY ORDERED
     // Yeah, talk about idiotic API...
     // https://dev.twitter.com/oauth/overview/creating-signatures#note-lexigraphically
-    public class TwitterService : BaseOauth2Service
+    public class TwitterService : BaseOauth2Service<AbstractClientProvider> , IBaseOAuth2Service
     {
         private readonly OAuth2Util _util = new OAuth2Util();
 
@@ -36,7 +36,7 @@ namespace Oauth2Login.Service
                 // Twitter relies on Callback URL setting on http://apps.twitter.com/
                 // If you set client callback here it'll return 401
                 //                "oauth_callback", _client.CallBackUrl,
-                "oauth_consumer_key", _client.ClientId,
+                "oauth_consumer_key", Client.ClientId,
                 "oauth_nonce", _util.GetNonce(),
                 "oauth_signature_method", "HMAC-SHA1",
                 "oauth_timestamp", _util.GetTimeStamp(),
@@ -44,7 +44,7 @@ namespace Oauth2Login.Service
                 );
 
             const string requestTokenUrl = "https://api.twitter.com/oauth/request_token";
-            var signature = _util.GetSha1Signature("POST", requestTokenUrl, qstring, _client.ClientSecret);
+            var signature = _util.GetSha1Signature("POST", requestTokenUrl, qstring, Client.ClientSecret);
             var responseText = HttpPost(requestTokenUrl, qstring + "&oauth_signature=" + Uri.EscapeDataString(signature));
 
             var twitterAuthResp = new TwitterAuthResponse(responseText);
@@ -106,7 +106,7 @@ namespace Oauth2Login.Service
                 return OAuth2Consts.ACCESS_DENIED;
 
             string postData = QueryStringBuilder.Build(
-                "oauth_consumer_key", _client.ClientId,
+                "oauth_consumer_key", Client.ClientId,
                 "oauth_nonce", _util.GetNonce(),
                 "oauth_signature_method", "HMAC-SHA1",
                 "oauth_timestamp", _util.GetTimeStamp(),
@@ -116,13 +116,13 @@ namespace Oauth2Login.Service
                 );
 
             const string accessTokenUrl = "https://api.twitter.com/oauth/access_token";
-            var signature = _util.GetSha1Signature("POST", accessTokenUrl, postData, _client.ClientSecret);
+            var signature = _util.GetSha1Signature("POST", accessTokenUrl, postData, Client.ClientSecret);
             var responseText = HttpPost(accessTokenUrl, postData + "&oauth_signature=" + Uri.EscapeDataString(signature));
 
             var twitterAuthResp = new TwitterAuthResponse(responseText);
 
-            _client.Token = twitterAuthResp.OAuthToken;
-            _client.TokenSecret = twitterAuthResp.OAuthTokenSecret;
+            Client.Token = twitterAuthResp.OAuthToken;
+            Client.TokenSecret = twitterAuthResp.OAuthTokenSecret;
 
             return twitterAuthResp.OAuthToken;
         }
@@ -166,11 +166,11 @@ namespace Oauth2Login.Service
         {
             var paramsList = new Dictionary<string, object>
             {
-                {"oauth_consumer_key", _client.ClientId},
+                {"oauth_consumer_key", Client.ClientId},
                 {"oauth_nonce", _util.GetNonce()},
                 {"oauth_signature_method", "HMAC-SHA1"},
                 {"oauth_timestamp", _util.GetTimeStamp()},
-                {"oauth_token", _client.Token},
+                {"oauth_token", Client.Token},
                 {"oauth_version", "1.0"}
             };
 
@@ -184,7 +184,7 @@ namespace Oauth2Login.Service
 
             var qstring = QueryStringBuilder.BuildFromDictionary(paramsList, true);
 
-            var signature = _util.GetSha1Signature(mode, callingUrl, qstring, _client.ClientSecret, _client.TokenSecret);
+            var signature = _util.GetSha1Signature(mode, callingUrl, qstring, Client.ClientSecret, Client.TokenSecret);
             qstring += "&oauth_signature=" + Uri.EscapeDataString(signature);
 
             return qstring;

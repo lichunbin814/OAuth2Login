@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace Oauth2Login.Configuration
+namespace Oauth2Login.Configuration.Facebook
 {
     public class OAuthConfigurationElementCollection : ConfigurationElementCollection
     {
@@ -8,7 +8,6 @@ namespace Oauth2Login.Configuration
         {
             return new OAuthConfigurationElement();
         }
-
 
         protected override object GetElementKey(ConfigurationElement element)
         {

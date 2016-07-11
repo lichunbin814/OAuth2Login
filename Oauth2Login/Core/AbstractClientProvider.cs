@@ -5,7 +5,7 @@ using Oauth2Login.Configuration;
 
 namespace Oauth2Login.Core
 {
-    public abstract class AbstractClientProvider
+    public abstract class AbstractClientProvider 
     {
         protected AbstractClientProvider()
         {
@@ -30,8 +30,6 @@ namespace Oauth2Login.Core
         public string CallBackUrl { get; set; }
         public string Scope { get; set; }
         public string Endpoint { get; set; }
-
-        //public string AcceptedRedirectUrl { get; set; }
         public string FailedRedirectUrl { get; set; }
         public string Proxy { get; set; }
 

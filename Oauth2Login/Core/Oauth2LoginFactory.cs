@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Configuration;
 using Oauth2Login.Configuration;
+using FacebookOAuthConfigurationElementCollection = Oauth2Login.Configuration.Facebook.OAuthConfigurationElementCollection;
+using FacebookOAuthConfigurationElement = Oauth2Login.Configuration.Facebook.OAuthConfigurationElement;
 
 namespace Oauth2Login.Core
 {
@@ -10,10 +12,40 @@ namespace Oauth2Login.Core
         public static T CreateClient<T>(string configName) where T : AbstractClientProvider, new()
         {
             if (String.IsNullOrEmpty(configName))
+            {
                 throw new Exception("Invalid configuration name");
+            }
 
+            configName = configName.ToLower();
+
+            switch (configName)
+            {
+                case "facebook":
+                    return GetDefaultClient<T, OAuthWebConfigurationElement, FacebookOAuthConfigurationElementCollection>(configName);
+                default:
+                    return GetDefaultClient<T, OAuthWebConfigurationElement, OAuthConfigurationElementCollection>(configName);
+            }
+        }
+
+        private static string GetSectionName(string configName)
+        {
+            string baseConfigName = "oauth2.login.configuration";
+            switch (configName)
+            {
+                case "facebook":
+                    return string.Format("{0}.{1}", baseConfigName, configName);
+                default:
+                    return baseConfigName;
+            }
+        }
+
+        private static T GetDefaultClient<T, WebElement, OAuthElementCollection>(string configName)
+            where T : AbstractClientProvider, new()
+            where WebElement : new()
+            where OAuthElementCollection : ConfigurationElementCollection, new()
+        {
             var ccRoot =
-                ConfigurationManager.GetSection("oauth2.login.configuration") as OAuthConfigurationSection;
+                ConfigurationManager.GetSection(GetSectionName(configName)) as IBaseOAuthConfigurationSection<WebElement, OAuthElementCollection>;
 
             if (ccRoot != null)
             {
@@ -21,16 +53,7 @@ namespace Oauth2Login.Core
 
                 IEnumerator configurationReader = ccRoot.OAuthVClientConfigurations.GetEnumerator();
 
-                OAuthConfigurationElement ccOauth = null;
-                while (configurationReader.MoveNext())
-                {
-                    var currentOauthElement = configurationReader.Current as OAuthConfigurationElement;
-                    if (currentOauthElement != null && currentOauthElement.Name == configName)
-                    {
-                        ccOauth = currentOauthElement;
-                        break;
-                    }
-                }
+                OAuthConfigurationElement ccOauth = GetCcOAuth(configName, configurationReader);
 
                 if (ccOauth != null)
                 {
@@ -39,7 +62,7 @@ namespace Oauth2Login.Core
                         ccWebElem,
                         ccOauth
                     };
-                    var client = (T) Activator.CreateInstance(typeof (T), constructorParams);
+                    var client = (T)Activator.CreateInstance(typeof(T), constructorParams);
 
                     return client;
                 }
@@ -53,20 +76,32 @@ namespace Oauth2Login.Core
             return default(T);
         }
 
-        //public static T CreateClient<T>(string oClientId, string oClientSecret, string oCallbackUrl, string oScope,
-        //    string oAcceptedUrl, string oFailedUrl, string oProxy) where T : AbstractClientProvider, new()
-        //{
-        //    var client = (T) Activator.CreateInstance(typeof (T), new object[]
-        //    {
-        //        oClientId,
-        //        oClientSecret,
-        //        oCallbackUrl,
-        //        oScope,
-        //        oAcceptedUrl,
-        //        oFailedUrl,
-        //        oProxy
-        //    });
-        //    return client;
-        //}
+        private static OAuthConfigurationElement GetCcOAuth(string configName, IEnumerator configurationReader)
+        {
+            string oAuthProfileName = "";
+            if (configName.Equals("facebook", StringComparison.OrdinalIgnoreCase))
+            {
+                oAuthProfileName = "main";
+            }
+            else
+            {
+                //google , WindowsLive , PayPal , Twitter
+                oAuthProfileName = configName;
+            }
+
+
+            OAuthConfigurationElement ccOauth = null;
+            while (configurationReader.MoveNext())
+            {
+                var currentOauthElement = configurationReader.Current as OAuthConfigurationElement;
+                if (currentOauthElement != null && currentOauthElement.Name == oAuthProfileName)
+                {
+                    ccOauth = currentOauthElement;
+                    break;
+                }
+            }
+
+            return ccOauth;
+        }
     }
 }

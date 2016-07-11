@@ -8,7 +8,7 @@ using Oauth2Login.Core;
 
 namespace Oauth2Login.Service
 {
-    public class WindowsLiveService : IClientService
+    public class WindowsLiveService : IClientService<AbstractClientProvider>
     {
         private static string _oauthUrl = "";
         private AbstractClientProvider _client;

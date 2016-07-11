@@ -6,26 +6,39 @@ using System.Web;
 using Newtonsoft.Json;
 using Oauth2Login.Client;
 using Oauth2Login.Core;
+using Oauth2Login.Core.Facebook;
 
 namespace Oauth2Login.Service
 {
-    public class FacebookService : BaseOauth2Service
+    public interface IBaseOAuth2Service
+    {
+        string BeginAuthentication();
+
+        string ValidateLogin(HttpRequestBase request);
+    }
+
+    public class FacebookService : BaseOauth2Service<FacebookClientProvider>, IBaseOAuth2Service
     {
         private static string _oauthUrl = "";
 
-        public FacebookService(AbstractClientProvider oClient) : base(oClient) { }
+
+
+        public FacebookService(FacebookClientProvider oClient) : base(oClient)
+        {
+
+        }
 
         public override string BeginAuthentication()
         {
             var qstring = QueryStringBuilder.Build(
-                "client_id", _client.ClientId,
-                "redirect_uri", _client.CallBackUrl,
-                "scope", _client.Scope,
+                "client_id", Client.ClientId,
+                "redirect_uri", Client.CallBackUrl,
+                "scope", Client.Scope,
                 "state", "",
                 "display", "popup"
                 );
 
-            _oauthUrl = "https://www.facebook.com/dialog/oauth?" + qstring;
+            _oauthUrl = "https://www.facebook.com/v2.6/dialog/oauth?" + qstring;
 
             return _oauthUrl;
         }
@@ -34,13 +47,13 @@ namespace Oauth2Login.Service
         {
             var code = request.Params["code"];
             if (String.IsNullOrEmpty(code))
-                return OAuth2Consts.ACCESS_DENIED;
+                return OAuth2Consts.ACCESS_DENIED; 
 
             string tokenUrl = string.Format("https://graph.facebook.com/oauth/access_token?");
             string postData = QueryStringBuilder.Build(
-                "client_id", _client.ClientId,
-                "redirect_uri", _client.CallBackUrl,
-                "client_secret", _client.ClientSecret,
+                "client_id", Client.ClientId,
+                "redirect_uri", Client.CallBackUrl,
+                "client_secret", Client.ClientSecret,
                 "code", code
             );
 
@@ -51,11 +64,25 @@ namespace Oauth2Login.Service
 
         public override void RequestUserProfile()
         {
-            string profileUrl = "https://graph.facebook.com/me?access_token=" + _client.Token;
+
+
+            string profileUrl = "https://graph.facebook.com/me?access_token=" + Client.Token + GetFields(Client.Fields);
 
             string result = HttpGet(profileUrl);
 
             ParseUserData<FacebookUserData>(result);
+        }
+
+        private string GetFields(string fields)
+        {
+            if (!string.IsNullOrWhiteSpace(fields))
+            {
+                return string.Format("&fields=" + fields);
+            }
+            else
+            {
+                return "";
+            }
         }
     }
 

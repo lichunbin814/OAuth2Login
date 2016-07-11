@@ -8,7 +8,7 @@ using Oauth2Login.Core;
 
 namespace Oauth2Login.Service
 {
-    public class GoogleService : BaseOauth2Service
+    public class GoogleService : BaseOauth2Service<AbstractClientProvider> , IBaseOAuth2Service
     {
         private static string _oauthUrl = "";
 
@@ -17,10 +17,10 @@ namespace Oauth2Login.Service
         public override string BeginAuthentication()
         {
             var qstring = QueryStringBuilder.BuildCompex(new[] { "scope" },
-                "scope", _client.Scope,
+                "scope", Client.Scope,
                 "state", "1",
-                "redirect_uri", _client.CallBackUrl,
-                "client_id", _client.ClientId,
+                "redirect_uri", Client.CallBackUrl,
+                "client_id", Client.ClientId,
                 "response_type", "code",
                 "approval_prompt", "auto",
                 "access_type", "online"
@@ -40,9 +40,9 @@ namespace Oauth2Login.Service
             const string tokenUrl = "https://accounts.google.com/o/oauth2/token";
             var postData = QueryStringBuilder.Build(
                 "code", code,
-                "client_id", _client.ClientId,
-                "client_secret", _client.ClientSecret,
-                "redirect_uri", _client.CallBackUrl,
+                "client_id", Client.ClientId,
+                "client_secret", Client.ClientSecret,
+                "redirect_uri", Client.CallBackUrl,
                 "grant_type", "authorization_code"
                 );
 
@@ -52,7 +52,7 @@ namespace Oauth2Login.Service
 
         public override void RequestUserProfile()
         {
-            string profileUrl = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + _client.Token;
+            string profileUrl = "https://www.googleapis.com/oauth2/v1/userinfo?access_token=" + Client.Token;
 
             string result = HttpGet(profileUrl);
 

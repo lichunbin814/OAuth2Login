@@ -9,7 +9,7 @@ using Oauth2Login.Core;
 
 namespace Oauth2Login.Service
 {
-    public class PayPalService : BaseOauth2Service
+    public class PayPalService : BaseOauth2Service<AbstractClientProvider> , IBaseOAuth2Service
     {
         private static string _oauthUrl = "";
 
@@ -17,7 +17,7 @@ namespace Oauth2Login.Service
         {
             get
             {
-                return _client.Endpoint == OAuth2Consts.SANDBOX
+                return Client.Endpoint == OAuth2Consts.SANDBOX
                     ? "https://api.sandbox.paypal.com"
                     : "https://api.paypal.com";
             }
@@ -27,7 +27,7 @@ namespace Oauth2Login.Service
         {
             get
             {
-                return _client.Endpoint == OAuth2Consts.SANDBOX
+                return Client.Endpoint == OAuth2Consts.SANDBOX
                     ? "https://www.sandbox.paypal.com"
                     : "https://www.paypal.com";
             }
@@ -41,10 +41,10 @@ namespace Oauth2Login.Service
         public override string BeginAuthentication()
         {
             var qstring = QueryStringBuilder.Build(
-                "client_id", _client.ClientId,
+                "client_id", Client.ClientId,
                 "response_type", "code",
-                "redirect_uri", _client.CallBackUrl,
-                "scope", _client.Scope
+                "redirect_uri", Client.CallBackUrl,
+                "scope", Client.Scope
                 );
 
             _oauthUrl = LoginUrlOauth + "/webapps/auth/protocol/openidconnect/v1/authorize?" + qstring;
@@ -61,10 +61,10 @@ namespace Oauth2Login.Service
             var oauthUrl = ApiUrlOauth + "/v1/identity/openidconnect/tokenservice";
             var postData = QueryStringBuilder.Build(
                 "grant_type", "authorization_code",
-                "redirect_uri", _client.CallBackUrl,
+                "redirect_uri", Client.CallBackUrl,
                 "code", code,
-                "client_id", _client.ClientId,
-                "client_secret", _client.ClientSecret
+                "client_id", Client.ClientId,
+                "client_secret", Client.ClientSecret
                 );
             var responseJson = HttpPost(oauthUrl, postData);
             return JsonConvert.DeserializeAnonymousType(responseJson, new { access_token = "" }).access_token;
@@ -77,9 +77,9 @@ namespace Oauth2Login.Service
             var header = new NameValueCollection
             {
                 {"Accept-Language", "en_US"},
-                {"Authorization", "Bearer " + _client.Token}
+                {"Authorization", "Bearer " + Client.Token}
             };
-            var result = RestfullRequest.Request(profileUrl, "POST", "application/json", header, null, _client.Proxy);
+            var result = RestfullRequest.Request(profileUrl, "POST", "application/json", header, null, Client.Proxy);
 
             ParseUserData<PayPalUserData>(result);
         }

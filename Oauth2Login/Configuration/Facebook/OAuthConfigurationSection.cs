@@ -1,10 +1,9 @@
 ﻿using System.Configuration;
 
-namespace Oauth2Login.Configuration
+namespace Oauth2Login.Configuration.Facebook
 {
-    public class OAuthConfigurationSection :
-        ConfigurationSection,
-        IBaseOAuthConfigurationSection<OAuthWebConfigurationElement, OAuthConfigurationElementCollection>
+    public class OAuthConfigurationSection : ConfigurationSection,
+         IBaseOAuthConfigurationSection<OAuthWebConfigurationElement, OAuthConfigurationElementCollection>
     {
         [ConfigurationProperty("web", IsRequired = false)]
         public OAuthWebConfigurationElement WebConfiguration
@@ -20,6 +19,4 @@ namespace Oauth2Login.Configuration
             get { return base["oauth"] as OAuthConfigurationElementCollection; }
         }
     }
-
-   
 }

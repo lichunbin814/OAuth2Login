@@ -2,9 +2,10 @@
 
 namespace Oauth2Login.Core
 {
-    public interface IClientService
+    public interface IClientService<ClientProvider>
+        where ClientProvider : AbstractClientProvider
     {
         void CreateOAuthClient(IOAuthContext oContext);
-        void CreateOAuthClient(AbstractClientProvider oClient);
+        void CreateOAuthClient(ClientProvider oClient);
     }
 }

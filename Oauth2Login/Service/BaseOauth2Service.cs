@@ -10,23 +10,32 @@ using Oauth2Login.Core;
 
 namespace Oauth2Login.Service
 {
-    public abstract class BaseOauth2Service : IClientService
+    public abstract class BaseOauth2Service : BaseOauth2Service<AbstractClientProvider>
     {
-        protected AbstractClientProvider _client;
-
-        protected BaseOauth2Service(AbstractClientProvider oClient)
+        public BaseOauth2Service(AbstractClientProvider oClient) : base(oClient)
         {
-            _client = oClient;
+
+        }
+    }
+
+    public abstract class BaseOauth2Service<TClientProvider> : IClientService<TClientProvider>
+        where TClientProvider : AbstractClientProvider
+    {
+        public TClientProvider Client { get; set; }
+
+        protected BaseOauth2Service(TClientProvider oClient)
+        {
+            Client = oClient;
         }
 
         public void CreateOAuthClient(IOAuthContext oContext)
         {
-            _client = oContext.Client;
+            Client = oContext.Client as TClientProvider;
         }
 
-        public void CreateOAuthClient(AbstractClientProvider oClient)
+        public void CreateOAuthClient(TClientProvider oClient)
         {
-            _client = oClient;
+            Client = oClient;
         }
 
         protected string HttpGet(string url)
@@ -36,13 +45,13 @@ namespace Oauth2Login.Service
                 {"Accept-Language", "en-US"}
             };
 
-            return RestfullRequest.Request(url, "GET", "application/x-www-form-urlencoded", header, null, _client.Proxy);
+            return RestfullRequest.Request(url, "GET", "application/x-www-form-urlencoded", header, null, Client.Proxy);
         }
 
         protected string HttpPost(string urlToPost, string postData)
         {
             var result = RestfullRequest.Request(urlToPost, "POST", "application/x-www-form-urlencoded",
-                    null, postData, _client.Proxy);
+                    null, postData, Client.Proxy);
 
             return result;
         }
@@ -53,7 +62,7 @@ namespace Oauth2Login.Service
         public abstract void RequestUserProfile();
 
         // TODO: This looks horrible, refactor using generics
-        public static BaseOauth2Service GetService(string id)
+        public static IBaseOAuth2Service GetService(string id)
         {
             switch (id.ToLower())
             {
@@ -80,23 +89,23 @@ namespace Oauth2Login.Service
             // client token
             string tokenResult = RequestToken(request);
             if (tokenResult == OAuth2Consts.ACCESS_DENIED)
-                return _client.FailedRedirectUrl;
+                return Client.FailedRedirectUrl;
 
-            _client.Token = tokenResult;
+            Client.Token = tokenResult;
 
             // client profile
             RequestUserProfile();
 
-            UserData.OAuthToken = _client.Token;
-            UserData.OAuthTokenSecret = _client.TokenSecret;
+            UserData.OAuthToken = Client.Token;
+            UserData.OAuthTokenSecret = Client.TokenSecret;
 
             return null;
         }
 
         public void ImpersonateUser(string oauthToken, string oauthTokenSecret)
         {
-            _client.Token = oauthToken;
-            _client.TokenSecret = oauthTokenSecret;
+            Client.Token = oauthToken;
+            Client.TokenSecret = oauthTokenSecret;
         }
 
         protected void ParseUserData<TData>(string json) where TData : BaseUserData

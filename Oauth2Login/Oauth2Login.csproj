@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Oauth2Login</RootNamespace>
     <AssemblyName>Oauth2Login</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -54,6 +54,10 @@
     <Compile Include="Client\GoogleClinet.cs" />
     <Compile Include="Client\PayPalClient.cs" />
     <Compile Include="Client\TwitterClient.cs" />
+    <Compile Include="Configuration\Facebook\OAuthConfigurationElement.cs" />
+    <Compile Include="Configuration\Facebook\OAuthConfigurationElementCollection.cs" />
+    <Compile Include="Configuration\Facebook\OAuthConfigurationSection.cs" />
+    <Compile Include="Configuration\IBaseOAuthConfigurationSection.cs" />
     <Compile Include="Core\AbstractClientProvider.cs" />
     <Compile Include="Client\WindowsLiveClient.cs" />
     <Compile Include="Configuration\OAuthConfigurationElement.cs" />
@@ -61,6 +65,7 @@
     <Compile Include="Configuration\OAuthConfigurationSection.cs" />
     <Compile Include="Configuration\OAuthWebConfigurationElement.cs" />
     <Compile Include="Core\ExternalAuthServices.cs" />
+    <Compile Include="Core\Facebook\FacebookClientProvider.cs" />
     <Compile Include="Core\IClientService.cs" />
     <Compile Include="Core\IOAuthContext.cs" />
     <Compile Include="Core\Oauth2LoginFactory.cs" />
